@@ -1,4 +1,26 @@
-#include "lqr.h"
+/////////////////////////////////////////////////////////////////////////////////
+//                                                                             //
+//  Copyright (c) 2019 Leonardo Consoni <leonardojc@protonmail.com>            //
+//                                                                             //
+//  This file is part of Simple-iLQR.                                          //
+//                                                                             //
+//  Simple-iLQR is free software: you can redistribute it                      //
+//  and/or modify it under the terms of the GNU Lesser General Public License  //
+//  as published by the Free Software Foundation, either version 3 of the      //
+//  License, or (at your option) any later version.                            //
+//                                                                             //
+//  Simple-iLQR is distributed in the hope that it will                        //
+//  be useful, but WITHOUT ANY WARRANTY; without even the implied warranty     //
+//  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
+//  GNU Lesser General Public License for more details.                        //
+//                                                                             //
+//  You should have received a copy of the GNU Lesser General Public License   //
+//  along with Simple-iLQR. If not, see <http://www.gnu.org/licenses/>.        //
+//                                                                             //
+/////////////////////////////////////////////////////////////////////////////////
+
+
+#include "ilq_regulator.h"
 
 #include "matrix/matrix.h"
 
@@ -13,6 +35,7 @@ struct _ILQRegulatorData
   double costRatio;
   Matrix gain;
   Matrix aux;
+  Matrix state;
 };
 
 ILQRegulator ILQR_Create( size_t statesNumber, size_t inputsNumber, double costRatio )
@@ -27,27 +50,28 @@ ILQRegulator ILQR_Create( size_t statesNumber, size_t inputsNumber, double costR
   newRegulator->costWeight = Mat_CreateSquare( statesNumber, MATRIX_IDENTITY );
   newRegulator->costRatio = costRatio;
   
-  size_t variablesNumber = ( statesNumber > inputsNumber ) ? statesNumber : inputsNumber;
-  newRegulator->aux = Mat_CreateSquare( variablesNumber, MATRIX_ZERO );
+  newRegulator->aux = Mat_CreateSquare( statesNumber, MATRIX_ZERO );
+  
+  newRegulator->state = Mat_Create( NULL, statesNumber, 1 );
   
   return newRegulator;
 }
 
-void ILQR_SetPredictionFactor( ILQRegulator regulator, size_t outputIndex, size_t inputIndex, double ratio )
+void ILQR_SetTransitionFactor( ILQRegulator regulator, size_t oldStateIndex, size_t newStateIndex, double ratio )
 {
   if( regulator == NULL ) return;
   
-  Mat_SetElement( regulator->dynamicModel, outputIndex, inputIndex, ratio );
+  Mat_SetElement( regulator->dynamicModel, newStateIndex, oldStateIndex, ratio );
 }
 
-void ILQR_SetInputFactor( ILQRegulator regulator, size_t outputIndex, size_t inputIndex, double ratio )
+void ILQR_SetInputFactor( ILQRegulator regulator, size_t inputIndex, size_t stateIndex, double ratio )
 {
   if( regulator == NULL ) return;
   
-  Mat_SetElement( regulator->inputModel, outputIndex, inputIndex, ratio );
+  Mat_SetElement( regulator->inputModel, stateIndex, inputIndex, ratio );
 }
 
-bool ILQR_CalculateFeedback( ILQRegulator regulator, double* statesList, double* inputsList )
+bool ILQR_CalculateFeedback( ILQRegulator regulator, double* statesList, double* feedbacksList )
 {
   if( regulator == NULL ) return false;
   // At * X * B
@@ -64,16 +88,15 @@ bool ILQR_CalculateFeedback( ILQRegulator regulator, double* statesList, double*
   Mat_Dot( regulator->inputModel, MATRIX_TRANSPOSE, regulator->cost2Go, MATRIX_KEEP, regulator->gain );
   Mat_Dot( regulator->gain, MATRIX_KEEP, regulator->inputModel, MATRIX_KEEP, regulator->gain );
   Mat_Sum( regulator->gain, 1.0, regulator->costWeight, regulator->costRatio, regulator->gain );
-  if( Mat_Inverse( regulator->gain, regulator->gain ) ) return false;
+  if( Mat_Inverse( regulator->gain, regulator->gain ) == NULL ) return false;
   Mat_Dot( regulator->gain, MATRIX_KEEP, regulator->inputModel, MATRIX_TRANSPOSE, regulator->gain );
   Mat_Dot( regulator->gain, MATRIX_KEEP, regulator->cost2Go, MATRIX_KEEP, regulator->gain );
   Mat_Dot( regulator->gain, MATRIX_KEEP, regulator->dynamicModel, MATRIX_KEEP, regulator->gain );
   // u = K * x
-  Mat_Resize( regulator->aux, Mat_GetWidth( regulator->gain ), 1 );
-  Mat_SetData( regulator->aux, statesList );
-  Mat_Dot( regulator->gain, MATRIX_KEEP, regulator->aux, MATRIX_KEEP, regulator->aux );
+  Mat_SetData( regulator->state, statesList );
+  Mat_Dot( regulator->gain, MATRIX_KEEP, regulator->state, MATRIX_KEEP, regulator->aux );
   
-  Mat_GetData( regulator->aux, inputsList );
+  Mat_GetData( regulator->aux, feedbacksList );
   
   return true;
 }
@@ -87,6 +110,7 @@ void ILQR_Delete( ILQRegulator regulator )
   Mat_Discard( regulator->cost2Go );
   Mat_Discard( regulator->gain );
   Mat_Discard( regulator->aux );
+  Mat_Discard( regulator->state );
   
   return;
 }
