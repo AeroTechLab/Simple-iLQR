@@ -43,17 +43,17 @@ ILQRegulator ILQR_Create( size_t statesNumber, size_t inputsNumber, double costR
 
 /// @brief Defines correlation between two state variables in plant model                           
 /// @param[in] regulator reference to regulator
-/// @param[in] oldStateIndex index (in state vector) of input state variable
-/// @param[in] newStateIndex index (in state vector) of output state variable                                         
+/// @param[in] newStateIndex index (in state vector) of output state variable  
+/// @param[in] oldStateIndex index (in state vector) of input state variable                                       
 /// @param[in] ratio output/input ratio desired on calculation
-void ILQR_SetTransitionFactor( ILQRegulator regulator, size_t oldStateIndex, size_t newStateIndex, double ratio );
+void ILQR_SetTransitionFactor( ILQRegulator regulator, size_t newStateIndex, size_t oldStateIndex, double ratio );
 
 /// @brief Defines correlation between input and state variables in plant model         
 /// @param[in] regulator reference to regulator
-/// @param[in] inputIndex index of the input variable in the internal input vector
 /// @param[in] stateIndex index of the correspondent state variable in the internal state vector
+/// @param[in] inputIndex index of the input variable in the internal input vector
 /// @param[in] ratio output/input ratio desired on calculation
-void ILQR_SetInputFactor( ILQRegulator regulator, size_t inputIndex, size_t stateIndex, double ratio );
+void ILQR_SetInputFactor( ILQRegulator regulator, size_t stateIndex, size_t inputIndex, double ratio );
 
 /// @brief Calculates control input from state feedback with optimal gain                      
 /// @param[in] regulator reference to regulator

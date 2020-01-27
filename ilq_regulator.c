@@ -57,14 +57,14 @@ ILQRegulator ILQR_Create( size_t statesNumber, size_t inputsNumber, double costR
   return newRegulator;
 }
 
-void ILQR_SetTransitionFactor( ILQRegulator regulator, size_t oldStateIndex, size_t newStateIndex, double ratio )
+void ILQR_SetTransitionFactor( ILQRegulator regulator, size_t newStateIndex, size_t oldStateIndex, double ratio )
 {
   if( regulator == NULL ) return;
   
   Mat_SetElement( regulator->dynamicModel, newStateIndex, oldStateIndex, ratio );
 }
 
-void ILQR_SetInputFactor( ILQRegulator regulator, size_t inputIndex, size_t stateIndex, double ratio )
+void ILQR_SetInputFactor( ILQRegulator regulator, size_t stateIndex, size_t inputIndex, double ratio )
 {
   if( regulator == NULL ) return;
   
