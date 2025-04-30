@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //                                                                             //
-//  Copyright (c) 2019 Leonardo Consoni <leonardojc@protonmail.com>            //
+//  Copyright (c) 2019-2025 Leonardo Consoni <leonardojc@protonmail.com>       //
 //                                                                             //
 //  This file is part of Simple-iLQR.                                          //
 //                                                                             //

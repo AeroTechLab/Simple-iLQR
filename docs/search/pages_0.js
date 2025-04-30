@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['simple_2dilqr_17',['Simple-iLQR',['../index.html',1,'']]]
+  ['ilqr_0',['Simple-iLQR',['../index.html',1,'']]]
 ];
